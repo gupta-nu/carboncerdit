@@ -1,0 +1,16 @@
+[
+  {
+    "project_name": "Rainforest Conservation",
+    "registry": "Verra",
+    "vintage": 2021,
+    "quantity": 10,
+    "serial_number": "VCS-12345"
+  },
+  {
+    "project_name": "Wind Farm",
+    "registry": "Gold Standard",
+    "vintage": 2022,
+    "quantity": 5.0,
+    "serial_number": "GS-54321"
+  }
+]
