@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
+import json
 from models import Record, Event
 from schemas import RecordCreate, RecordOut, EventOut
 from database import get_db
@@ -11,7 +13,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-@router.post("/records", response_model=RecordOut, status_code=201)
+@router.post("/records", response_model=RecordOut)
 def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
     # Canonicalize and generate deterministic ID
     canonical = canonicalize_record_input(record_in)
@@ -27,10 +29,10 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
             float(db_record.quantity) == float(canonical["quantity"]) and
             db_record.serial_number == canonical["serial_number"]
         ):
-            # Return with events
+            # Return existing record with events (200 OK for idempotent operation)
             events = db.query(Event).filter(Event.record_id == record_id).order_by(Event.created_at).all()
             status = "RETIRED" if any(e.event_type == "RETIRED" for e in events) else "ACTIVE"
-            return RecordOut(
+            response = RecordOut(
                 id=record_id,
                 project_name=db_record.project_name,
                 registry=db_record.registry,
@@ -47,6 +49,8 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
                     created_at=e.created_at
                 ) for e in events]
             )
+            # Set the status code manually for idempotent case
+            return JSONResponse(content=json.loads(response.model_dump_json()), status_code=200)
         else:
             raise HTTPException(status_code=409, detail="Record exists with different data.")
     # Create new record and CREATED event
@@ -69,7 +73,7 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_record)
     events = [created_event]
-    return RecordOut(
+    response = RecordOut(
         id=record_id,
         project_name=new_record.project_name,
         registry=new_record.registry,
@@ -86,6 +90,8 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
             created_at=e.created_at
         ) for e in events]
     )
+    # Return 201 for new record creation
+    return JSONResponse(content=json.loads(response.model_dump_json()), status_code=201)
 
 @router.post("/records/{record_id}/retire", response_model=EventOut)
 def retire_record(record_id: str, db: Session = Depends(get_db)):

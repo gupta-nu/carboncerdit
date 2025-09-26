@@ -31,25 +31,37 @@ Get record details with all events and current status.
 ### POST /records/{id}/retire
 Retire a carbon credit (append RETIRED event).
 
-## Setup
+## Quick Start
 
-1. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Option 1: Use the startup script
+```bash
+./start_server.sh
+```
 
-2. **Run the server**:
-   ```bash
-   python -m uvicorn main:app --reload
-   ```
+### Option 2: Manual setup
+```bash
+# Activate virtual environment
+source .venv/bin/activate
 
-3. **Test the API**:
-   ```bash
-   python test_api.py
-   ```
+# Install dependencies (if needed)
+pip install -r requirements.txt
 
-4. **View API docs**:
-   Open http://127.0.0.1:8000/docs
+# Start server
+python -m uvicorn main:app --reload --port 8000
+```
+
+### Testing
+```bash
+# Start server first, then in another terminal:
+./run_tests.sh
+
+# Or run tests manually:
+source .venv/bin/activate
+python test_api.py
+```
+
+### API Documentation
+Open http://127.0.0.1:8000/docs in your browser
 
 ## Database
 
