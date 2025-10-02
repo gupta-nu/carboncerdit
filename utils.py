@@ -14,6 +14,6 @@ def canonicalize_record_input(record):
     }
 
 def generate_record_id(canonical):
-    # Deterministic hash of canonicalized fields
+    # Deterministic hash of canonicalized fields - same input always gives same ID
     s = f"{canonical['project_name']}|{canonical['registry']}|{canonical['vintage']}|{canonical['quantity']}|{canonical['serial_number']}"
     return hashlib.sha256(s.encode('utf-8')).hexdigest()

@@ -18,6 +18,7 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
     # Canonicalize and generate deterministic ID
     canonical = canonicalize_record_input(record_in)
     record_id = generate_record_id(canonical)
+    
     # Check for existing record
     db_record = db.query(Record).filter(Record.id == record_id).first()
     if db_record:
@@ -52,6 +53,7 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
             # Set the status code manually for idempotent case
             return JSONResponse(content=json.loads(response.model_dump_json()), status_code=200)
         else:
+            # same ID but different data = conflict
             raise HTTPException(status_code=409, detail="Record exists with different data.")
     # Create new record and CREATED event
     new_record = Record(
@@ -63,7 +65,7 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
         serial_number=canonical["serial_number"]
     )
     db.add(new_record)
-    db.flush()  # To get created_at
+    db.flush()  # need this to get the created_at timestamp
     created_event = Event(
         record_id=record_id,
         event_type="CREATED",
@@ -95,19 +97,21 @@ def create_record(record_in: RecordCreate, db: Session = Depends(get_db)):
 
 @router.post("/records/{record_id}/retire", response_model=EventOut)
 def retire_record(record_id: str, db: Session = Depends(get_db)):
-    # Lock record row for update (SQLite: SERIALIZABLE isolation)
+    # Check if record exists first
     record = db.query(Record).filter(Record.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found.")
-    # Check for existing RETIRED event
+    
+    # Check if already retired
     retired = db.query(Event).filter(Event.record_id == record_id, Event.event_type == "RETIRED").first()
     if retired:
         raise HTTPException(status_code=409, detail="Record already retired.")
-    # Create RETIRED event
+    
+    # Create retirement event
     event = Event(
         record_id=record_id,
         event_type="RETIRED",
-        payload=None
+        payload=None  # could add retirement reason here later
     )
     db.add(event)
     try:
