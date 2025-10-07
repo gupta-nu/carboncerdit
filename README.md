@@ -17,7 +17,7 @@ it took me little time to figure out the rounding part, i kept getting different
 
 ### Why did you use an event log instead of updating the record directly?
 
-Read Through how banks track transactions on a high level,they never delete anything, just add new entries.so for carbon credits this made sense to me too since
+understood how banks track transactions on a high level,they never delete anything, just add new entries.so for carbon credits this made sense to me too since
 - You need to prove what happend and when (regulatory stuff)
 - If someone claims fraud you have the full history
 - Can't accidentally lose data by overwriting
