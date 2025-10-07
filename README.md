@@ -34,9 +34,11 @@ so this gave double selling ,which contradicts the whole point of carbon credits
 
 ### How would you fix it?
 i looked into how i would fix this and decided to go with adding database contraints, to the event model
+
 ```python
 UniqueConstraint('record_id', 'event_type', name='uq_record_retired')
 ```
+
 so even if both requests hit at the same time, only one retired event can exist per record, second one fails with a contraint error which i can catch and return 409
 
 
@@ -48,7 +50,7 @@ This API manages carbon credit records and tracks thier lifecycle through events
 
 ## Setup
 
-```bash
+```shellscript
 # Install dependencies
 pip install -r requirements.txt
 
@@ -64,7 +66,7 @@ uvicorn main:app --reload
 
 ## Testing
 
-```bash
+```shellscript
 python test_api.py
 ```
 
@@ -73,4 +75,3 @@ python test_api.py
 ## Database
 
  SQLite by default (`carbon_credits.db`). Can easily switch to PostgreSQL by changing the DATABASE_URL.
-
